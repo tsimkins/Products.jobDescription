@@ -1,0 +1,143 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      xmlns:metal="http://xml.zope.org/namespaces/metal"
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+      lang="en"
+      metal:use-macro="here/main_template/macros/master"
+      i18n:domain="plone">
+
+<body>
+
+    <div metal:fill-slot="main">
+    <metal:main-macro define-macro="main"
+                      tal:define="kssClassesView context/@@kss_field_decorator_view;
+                                  getKssClasses nocall:kssClassesView/getKssClassesInlineEditable;
+                                  templateId template/getId;
+                                  normalizeString nocall:context/plone_utils/normalizeString;">
+
+        <div tal:replace="structure provider:plone.abovecontenttitle" />
+
+        <h1 metal:use-macro="here/kss_generic_macros/macros/generic_title_view">
+            Title or id
+        </h1>
+
+        <div tal:replace="structure provider:plone.belowcontenttitle" />
+
+        <p metal:use-macro="here/kss_generic_macros/macros/generic_description_view">
+            Description
+        </p>
+
+        <div tal:replace="structure provider:plone.abovecontentbody" />
+
+        <div metal:define-macro="text-field-view"
+             id="parent-fieldname-text" class="stx"
+             tal:define="kss_class python:getKssClasses('text',
+                         templateId=templateId, macro='text-field-view');
+                         text here/aq_explicit/getText|nothing"
+             tal:condition="text"
+             tal:attributes="class python:test(here.Format() in ('text/structured',
+                                                   'text/x-rst', ), 'stx' + kss_class, 'plain' + kss_class)">
+            <div metal:define-slot="inside" tal:replace="structure text">The body</div>
+        </div>
+
+        <metal:listingmacro define-macro="listing">
+        <tal:foldercontents define="folderContents here/getSortedEntries;
+                            use_view_action site_properties/typesUseViewActionInListings|python:();
+                            isEditor here/canModifyPortalContent
+                            ">
+        <tal:listing condition="folderContents">
+
+        <tal:download condition="isEditor">
+            <p>Admins: <a href="@@job_pageviews">Download Pageviews Report</a>.</p>
+        </tal:download>
+
+		<table class = "listing jobDescription">
+			<tr>
+				<th>Date Posted</th>
+				<th>Job Title</th>
+				<th>Job Description</th>
+				<th>Company Name</th>
+				<th>Location</th>
+				<th>Job Type/Status</th>
+			</tr>
+			
+            <tal:block tal:repeat="item folderContents">
+                <tal:defineVars
+                     tal:define="item_url item/getURL|item/absolute_url;
+                                       item_id item/getId|item/id;
+                                       item_title_or_id item/pretty_title_or_id;
+                                       item_description item/Description;
+                                       item_type item/portal_type;
+                                       item_type_title item/Type;
+                                       item_type_class python: 'contenttype-' + normalizeString(item_type);
+                                       item_modified item/ModificationDate;
+                                       item_created item/CreationDate;
+                                       item_effective python:item.getEffectiveDate();
+                                       item_wf_state item/review_state|python: context.portal_workflow.getInfoFor(item, 'review_state', '');
+                                       item_wf_state_class python:'state-' + normalizeString(item_wf_state);
+                                       item_creator item/Creator;
+                                       item_location item/getJob_location;
+                                       item_company item/getCompany_name;
+                                       item_status python:'%s/%s' % (item.getJob_type(), item.getJob_status()); 
+                                       error_icon string:${portal_url}/error_icon.gif;
+                                       isOldPosting item/isOldPosting;
+                                       dateThreshold item/dateThreshold;"
+                     >
+
+					<tr tal:define="oddrow repeat/item/odd;"
+                        tal:attributes="class python:test(oddrow, 'even', 'odd')">
+
+						<td nowrap="nowrap">
+
+						<span tal:condition="item_effective" tal:replace="python:item_effective.strftime('%m/%d/%Y')" />
+						<span tal:condition="not:item_effective">
+						      Not Published
+						</span>
+						<img tal:condition="python:isOldPosting and isEditor"
+						     tal:attributes="src error_icon;
+						                      title string:Posted over ${dateThreshold} days ago" />
+						</td>
+						
+						<td>
+                        <a tal:attributes="href item_id; class item_wf_state_class"
+                           tal:content="item_title_or_id">
+                            Item Title
+                        </a>
+						</td>
+
+
+						<td tal:content="item_description" />
+						<td tal:content="item_company" />
+    					<td tal:content="item_location" />
+    					<td tal:content="item_status" />
+					</tr>
+
+
+                    <div class="visualClear"><!-- --></div>
+
+                </tal:defineVars>
+            </tal:block>
+            </table>
+
+        </tal:listing>
+        <metal:empty metal:define-slot="no_items_in_listing">
+            <p class="discreet"
+               tal:define="isAnon context/@@plone_portal_state/anonymous"
+               tal:condition="python: not folderContents and not isAnon"
+               i18n:translate="description_no_items_in_folder">
+                There are currently no items in this folder.
+            </p>
+        </metal:empty>
+
+        </tal:foldercontents>
+        </metal:listingmacro>
+
+        <metal:subtopics use-macro="here/atct_topic_view/macros/folderlisting_macro" />
+
+        <div tal:replace="structure provider:plone.belowcontentbody" />
+
+    </metal:main-macro>
+    </div>
+
+</body>
+</html>

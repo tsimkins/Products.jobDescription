@@ -1,0 +1,18 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:browser="http://namespaces.zope.org/browser"
+    i18n_domain="Products.jobDescription">
+
+  <include package="plone.app.contentmenu" />
+
+  <!-- -*- extra stuff goes here -*- -->
+
+  <browser:page
+      for="*"
+      name="job_pageviews"
+      class=".views.JobPageviews"
+      allowed_interface="..interfaces.IJobDescriptionFolder"
+      permission="cmf.ModifyPortalContent"
+      />
+
+</configure>
